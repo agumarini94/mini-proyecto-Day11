@@ -11,7 +11,7 @@ app.use(express.json()); //para que el servidor entienda formato json .
 app.use(
     cors({
         credentials: true,
-        origin: ['http://localhost:5172'] //el puerto donde corre el frontend
+        origin: ['https://mini-proyecto-frontend.onrender.com'] //el puerto donde corre el frontend
     }),
 ); 
 //cookieParser -> para que el servidor lea los cookies(necesario para los tokens de seguridad)
@@ -50,7 +50,7 @@ app.use((err, req, res, next) => {
 
 
 //arranque del servidor 
-const PORT = process.env.PORT | 4000; 
+const PORT = process.env.PORT || 4000; 
 app.listen(PORT, () => {
     console.log(`RUN ON ${PORT}`);
 });
