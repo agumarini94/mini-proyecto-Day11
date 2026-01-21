@@ -8,18 +8,18 @@ import contributorsRouter from './routes/contributors.js';
 
 const app = express();
 
-// 1. Middlewares básicos obligatorios
+// 1. Middlewares básicos
 app.use(express.json());
 app.use(cookieParser());
 
-// 2. Configuración de CORS Robusta
+// 2. Configuración de CORS
 const allowedOrigins = [
     'https://mini-proyecto-frontend.onrender.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173'
 ];
 
-app.use(cors({
+const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
@@ -30,23 +30,18 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
+};
 
-// --- SOLUCIÓN AL ERROR 403 PREFLIGHT ---
-// Este middleware atrapa las peticiones OPTIONS y responde 200 OK inmediatamente
-app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    return res.sendStatus(200);
-});
-// ---------------------------------------
+app.use(cors(corsOptions));
 
-// 3. Verificación de entorno
+// 3. Manejo de Preflight (OPTIONS) - CORREGIDO PARA EXPRESS 5
+// Usamos /(.*) en lugar de * para evitar el PathError
+app.options('/(.*)', cors(corsOptions));
+
+// 4. Verificación de entorno
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// 4. Rutas
+// 5. Rutas
 app.use('/api/user', userRouter);
 app.use('/api/stories', storiesRouter);
 app.use('/api/contributors', contributorsRouter);
@@ -55,7 +50,7 @@ app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", message: "Servidor funcionando" });
 });
 
-// 5. Control de errores
+// 6. Control de errores
 app.use((err, req, res, next) => {
     if (err.message === 'No permitido por CORS') {
         return res.status(403).json({ error: err.message });
@@ -67,7 +62,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// 6. Arranque
+// 7. Arranque
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`RUN ON ${PORT}`);
