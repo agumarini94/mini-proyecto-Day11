@@ -1,64 +1,70 @@
 import express from 'express';
-import cors from 'cors'; 
-import 'dotenv/config'; // --> Carga las variables del .env.. 
+import cors from 'cors';
+import 'dotenv/config';
 import cookieParser from 'cookie-parser';
-import userRouter from './routes/users.js';//importa las rutas. 
+import userRouter from './routes/users.js';
 import storiesRouter from './routes/stories.js';
 import contributorsRouter from './routes/contributors.js';
+
 const app = express();
 
-app.use(express.json()); //para que el servidor entienda formato json . 
+// 1. Middlewares básicos
+app.use(express.json());
+app.use(cookieParser());
 
-//Cors -> permite que el backend se comunique con el front end 
+// 2. Configuración de CORS Corregida
+const allowedOrigins = [
+    'https://mini-proyecto-frontend.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+];
+
 app.use(
     cors({
+        origin: function (origin, callback) {
+            // Permite peticiones sin origin (como Postman o apps móviles)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.indexOf(origin) === -1) {
+                const msg = 'El policy de CORS para este sitio no permite acceso desde el origen especificado.';
+                return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        },
         credentials: true,
-        origin: ['https://mini-proyecto-frontend.onrender.com',
-            'http://localhost:5173'] //el puerto donde corre el frontend
-    }),
-); 
-//cookieParser -> para que el servidor lea los cookies(necesario para los tokens de seguridad)
-app.use(cookieParser()); 
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+    })
+);
 
-//verificacion de entorno. --> 
+// Manejo manual de pre-flight (opcional pero ayuda mucho con errores de red)
+app.options('*', cors());
+
+// 3. Verificación de entorno
 const isDevelopment = process.env.NODE_ENV === 'development';
 if (isDevelopment) {
     console.log("Corriendo en modo: Desarrollo");
 }
-//agrupa todas las rutas de usuario bajo el prefijo api/user
+
+// 4. Rutas
 app.use('/api/user', userRouter);
-//aca conecto con las stories y los contributores .
 app.use('/api/stories', storiesRouter);
 app.use('/api/contributors', contributorsRouter);
 
-
-//ruta de prueba rapida para ver si el servidor esta funcionando
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok", message: "Servidor funcionando" });
 });
 
-//control de errores. --> *Este bloque atrapa cualquier error para que la app no se bloquee * <--
+// 5. Control de errores
 app.use((err, req, res, next) => {
-    console.error("DETALLE DEL ERROR:", err.stack); // Solo tú lo ves en consola
-
+    console.error("DETALLE DEL ERROR:", err.stack);
     res.status(err.status || 500).json({
-        // Mensaje útil para el usuario, sin revelar detalles técnicos peligrosos
         error: "Ocurrió un error inesperado en el servidor",
-        // En desarrollo puedes ver más info, en producción nada
         message: isDevelopment ? err.message : "Intente más tarde"
     });
 });
 
-
-
-
-
-
-
-//arranque del servidor 
-const PORT = process.env.PORT || 4000; 
+// 6. Arranque
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`RUN ON ${PORT}`);
 });
-
-
