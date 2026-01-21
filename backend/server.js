@@ -12,32 +12,29 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// 2. Configuración de CORS Corregida
+// 2. Configuración de CORS
 const allowedOrigins = [
     'https://mini-proyecto-frontend.onrender.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173'
 ];
 
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            // Permite peticiones sin origin (como Postman o apps móviles)
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.indexOf(origin) === -1) {
-                const msg = 'El policy de CORS para este sitio no permite acceso desde el origen especificado.';
-                return callback(new Error(msg), false);
-            }
-            return callback(null, true);
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-    })
-);
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origin (como Postman) o si está en la lista blanca
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('No permitido por CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+};
 
-// Manejo manual de pre-flight (opcional pero ayuda mucho con errores de red)
-app.options('*', cors());
+// Aplicar CORS a todas las rutas
+app.use(cors(corsOptions));
 
 // 3. Verificación de entorno
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -56,6 +53,11 @@ app.get("/health", (req, res) => {
 
 // 5. Control de errores
 app.use((err, req, res, next) => {
+    // Si el error es de CORS, lo manejamos específicamente
+    if (err.message === 'No permitido por CORS') {
+        return res.status(403).json({ error: err.message });
+    }
+
     console.error("DETALLE DEL ERROR:", err.stack);
     res.status(err.status || 500).json({
         error: "Ocurrió un error inesperado en el servidor",
