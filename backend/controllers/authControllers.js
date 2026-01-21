@@ -54,8 +54,7 @@ export const login = async (req, res, next) => {
     }
 
     // Comparamos la contraseña de Postman con el hash de la DB
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }

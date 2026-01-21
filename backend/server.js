@@ -3,6 +3,8 @@ import cors from 'cors';
 import 'dotenv/config'; // --> Carga las variables del .env.. 
 import cookieParser from 'cookie-parser';
 import userRouter from './routes/users.js';//importa las rutas. 
+import storiesRouter from './routes/stories.js';
+import contributorsRouter from './routes/contributors.js';
 const app = express();
 
 app.use(express.json()); //para que el servidor entienda formato json . 
@@ -24,6 +26,9 @@ if (isDevelopment) {
 }
 //agrupa todas las rutas de usuario bajo el prefijo api/user
 app.use('/api/user', userRouter);
+//aca conecto con las stories y los contributores .
+app.use('/api/stories', storiesRouter);
+app.use('/api/contributors', contributorsRouter);
 
 
 //ruta de prueba rapida para ver si el servidor esta funcionando

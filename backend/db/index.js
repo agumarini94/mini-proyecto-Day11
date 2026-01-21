@@ -13,3 +13,5 @@ const pool = new Pool({
 
 // Exportamos una función query segura para usarla en los Models
 export const query = (text, params) => pool.query(text, params);
+
+export default pool;
