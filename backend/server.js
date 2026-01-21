@@ -13,7 +13,8 @@ app.use(express.json()); //para que el servidor entienda formato json .
 app.use(
     cors({
         credentials: true,
-        origin: ['https://mini-proyecto-frontend.onrender.com'] //el puerto donde corre el frontend
+        origin: ['https://mini-proyecto-frontend.onrender.com',
+            'http://localhost:5173'] //el puerto donde corre el frontend
     }),
 ); 
 //cookieParser -> para que el servidor lea los cookies(necesario para los tokens de seguridad)
